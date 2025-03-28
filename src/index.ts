@@ -7,6 +7,8 @@ import { zodToJsonSchema } from "zod-to-json-schema";
 import { getTokenPrice } from "./lib/get-token-prices.js";
 import { GetTokenPriceSchema } from "./lib/get-token-prices.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { getTvl, GetTvlSchema } from "./lib/get-tvl.js";
+
 const server = new Server(
   {
     name: "stellar-mcp",
@@ -30,6 +32,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           "The price is returned formated in english and in USD. ",
         inputSchema: zodToJsonSchema(GetTokenPriceSchema),
       },
+      {
+        name: "get-tvl",
+        description:
+          "Get live TVL in any supported network. " +
+          "pass the network name. " +
+          "The TVL is returned formated in english and in USD. ",
+        inputSchema: zodToJsonSchema(GetTvlSchema),
+      },
     ],
   };
 });
@@ -52,6 +62,17 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case "get-tvl": {
+        const tvl = await getTvl(args);
+        return {
+          content: [
+            {
+              type: "text",
+              text: `Latest TVL: ${tvl.latestTvl} Daily Change: ${tvl.dailyChange} Weekly Change: ${tvl.weeklyChange}`,
+            },
+          ],
+        };
+      }
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
