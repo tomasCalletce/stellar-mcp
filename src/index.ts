@@ -1,3 +1,5 @@
+import path from "path";
+import express, { Request, Response } from "express";
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import {
   ListToolsRequestSchema,
@@ -10,7 +12,6 @@ import { getTvl, GetTvlSchema } from "./lib/get-tvl.js";
 import { getStablecoin, GetStablecoinSchema } from "./lib/get-stablecoin.js";
 import { GetAmmSummarySchema } from "./lib/get-amm-summary.js";
 import { getAmmSummary } from "./lib/get-amm-summary.js";
-import express, { Request, Response } from "express";
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
 const app = express();
@@ -132,6 +133,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       isError: true,
     };
   }
+});
+
+app.get("/", (_: Request, res: Response) => {
+  res.sendFile(path.join(__dirname, "../public/index.html"));
 });
 
 app.get("/sse", async (_: Request, res: Response) => {
