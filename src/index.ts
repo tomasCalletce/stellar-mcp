@@ -10,8 +10,11 @@ import { getTvl, GetTvlSchema } from "./lib/get-tvl.js";
 import { getStablecoin, GetStablecoinSchema } from "./lib/get-stablecoin.js";
 import { GetAmmSummarySchema } from "./lib/get-amm-summary.js";
 import { getAmmSummary } from "./lib/get-amm-summary.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import express, { Request, Response } from "express";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
+const app = express();
+const transports: { [sessionId: string]: SSEServerTransport } = {};
 const server = new Server(
   {
     name: "stellar-mcp",
@@ -131,13 +134,23 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-async function runServer() {
-  const transport = new StdioServerTransport();
+app.get("/sse", async (_: Request, res: Response) => {
+  const transport = new SSEServerTransport("/messages", res);
+  transports[transport.sessionId] = transport;
+  res.on("close", () => {
+    delete transports[transport.sessionId];
+  });
   await server.connect(transport);
-  console.error("Stellar MCP Server running");
-}
-
-runServer().catch((error) => {
-  console.error("Fatal error running server:", error);
-  process.exit(1);
 });
+
+app.post("/messages", async (req: Request, res: Response) => {
+  const sessionId = req.query.sessionId as string;
+  const transport = transports[sessionId];
+  if (transport) {
+    await transport.handlePostMessage(req, res);
+  } else {
+    res.status(400).send("No transport found for sessionId");
+  }
+});
+
+app.listen(process.env.PORT || 4000);
