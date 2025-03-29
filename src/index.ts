@@ -6,11 +6,12 @@ import {
 import { zodToJsonSchema } from "zod-to-json-schema";
 import { getTokenPrice } from "./lib/get-token-prices.js";
 import { GetTokenPriceSchema } from "./lib/get-token-prices.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { getTvl, GetTvlSchema } from "./lib/get-tvl.js";
 import { getStablecoin, GetStablecoinSchema } from "./lib/get-stablecoin.js";
 import { GetAmmSummarySchema } from "./lib/get-amm-summary.js";
 import { getAmmSummary } from "./lib/get-amm-summary.js";
+import express, { Request, Response } from "express";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
 const server = new Server(
   {
@@ -131,13 +132,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   }
 });
 
-async function main() {
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
-  console.error("Stellar MCP Server running");
-}
+const app = express();
+const port = process.env.PORT || 4000;
 
-main().catch((error) => {
-  console.error("Fatal error in main():", error);
-  process.exit(1);
+const transports: { [sessionId: string]: SSEServerTransport } = {};
+
+app.get("/sse", async (_: Request, res: Response) => {
+  const transport = new SSEServerTransport("/messages", res);
+  transports[transport.sessionId] = transport;
+  res.on("close", () => {
+    delete transports[transport.sessionId];
+  });
+  await server.connect(transport);
+});
+
+app.post("/messages", async (req: Request, res: Response) => {
+  const sessionId = req.query.sessionId as string;
+  const transport = transports[sessionId];
+  if (transport) {
+    await transport.handlePostMessage(req, res);
+  } else {
+    res.status(400).send("No transport found for sessionId");
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Stellar MCP Server running on port ${port}`);
 });
