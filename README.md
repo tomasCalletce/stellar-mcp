@@ -20,10 +20,3 @@ A simple MCP (Multi-Channel Protocol) server for interacting with the Stellar ne
 2.  `npm run build`
 3.  `npm start`
 
-## Configuration
-
-Edit the `.env` file. Key settings:
-
-*   `STELLAR_NETWORK_URL`: Stellar network address.
-
-That's it.
