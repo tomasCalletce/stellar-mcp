@@ -54,8 +54,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "get-amm-summary",
         description:
-          "Get live summary of a protocol in any supported network. " +
-          "Pass the protocol name. ",
+          "Get live summary of a protocol. " + "Pass the protocol name. ",
         inputSchema: zodToJsonSchema(GetAmmSummarySchema),
       },
     ],
