@@ -9,6 +9,8 @@ import { GetTokenPriceSchema } from "./lib/get-token-prices.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { getTvl, GetTvlSchema } from "./lib/get-tvl.js";
 import { getStablecoin, GetStablecoinSchema } from "./lib/get-stablecoin.js";
+import { GetAmmSummarySchema } from "./lib/get-amm-summary.js";
+import { getAmmSummary } from "./lib/get-amm-summary.js";
 
 const server = new Server(
   {
@@ -48,6 +50,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           "Pass the network name. " +
           "The TVL is returned formated in english and in USD. ",
         inputSchema: zodToJsonSchema(GetStablecoinSchema),
+      },
+      {
+        name: "get-amm-summary",
+        description:
+          "Get live summary of a protocol in any supported network. " +
+          "Pass the protocol name. ",
+        inputSchema: zodToJsonSchema(GetAmmSummarySchema),
       },
     ],
   };
@@ -96,6 +105,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           ],
         };
       }
+
+      case "get-amm-summary": {
+        const ammSummary = await getAmmSummary(args);
+
+        return {
+          content: [
+            Object.entries(ammSummary).map(([key, value]) => {
+              return {
+                type: "text",
+                text: `${key}: ${value}`,
+              };
+            }),
+          ],
+        };
+      }
+
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
