@@ -18,11 +18,10 @@ interface StablecoinResponse {
 }
 
 export async function queryStablecoin(
-  network: string,
-  stablecoinId: number
+  network: string
 ): Promise<StablecoinResponse[]> {
   const response = await fetch(
-    `https://stablecoins.llama.fi/stablecoincharts/${network}?stablecoin=${stablecoinId}`,
+    `https://stablecoins.llama.fi/stablecoincharts/${network}`,
     {
       headers: {
         accept: "*/*",
@@ -37,14 +36,11 @@ export async function queryStablecoin(
   return response.json();
 }
 
-export async function getStablecoin(
-  args: Record<string, unknown> | undefined,
-  stablecoinId: number
-) {
+export async function getStablecoin(args: Record<string, unknown> | undefined) {
   const parsed = GetStablecoinSchema.safeParse(args);
   if (!parsed.success) {
     throw new Error(`Invalid arguments for get-stablecoin: ${parsed.error}`);
   }
-  const stablecoin = await queryStablecoin(parsed.data.network, stablecoinId);
+  const stablecoin = await queryStablecoin(parsed.data.network);
   return stablecoin;
 }

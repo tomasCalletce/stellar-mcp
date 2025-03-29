@@ -84,17 +84,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
 
       case "get-stablecoin-tvl": {
-        const usdcTvl = await getStablecoin(args, 2);
+        const usdcTvl = await getStablecoin(args);
         const latestUsdcTvl =
           usdcTvl[usdcTvl.length - 1].totalBridgedToUSD.peggedUSD;
-        const usdtTvl = await getStablecoin(args, 3);
-        const latestUsdtTvl =
-          usdtTvl[usdtTvl.length - 1].totalBridgedToUSD.peggedUSD;
         return {
           content: [
             {
               type: "text",
-              text: `USDC TVL: ${latestUsdcTvl} USDT TVL: ${latestUsdtTvl}`,
+              text: `TVL of stablecoins is: ${latestUsdcTvl}`,
             },
           ],
         };
