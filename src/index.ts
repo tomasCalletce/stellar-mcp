@@ -111,12 +111,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         return {
           content: [
-            Object.entries(ammSummary).map(([key, value]) => {
-              return {
-                type: "text",
-                text: `${key}: ${value}`,
-              };
-            }),
+            {
+              type: "text",
+              text: `Summary: ${JSON.stringify(ammSummary)}`,
+            },
           ],
         };
       }
