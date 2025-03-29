@@ -8,6 +8,7 @@ import { getTokenPrice } from "./lib/get-token-prices.js";
 import { GetTokenPriceSchema } from "./lib/get-token-prices.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { getTvl, GetTvlSchema } from "./lib/get-tvl.js";
+import { getStablecoin, GetStablecoinSchema } from "./lib/get-stablecoin.js";
 
 const server = new Server(
   {
@@ -39,6 +40,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           "pass the network name. " +
           "The TVL is returned formated in english and in USD. ",
         inputSchema: zodToJsonSchema(GetTvlSchema),
+      },
+      {
+        name: "get-stablecoin-tvl",
+        description:
+          "Get live TVL of stablecoins in any supported network. " +
+          "Pass the network name. " +
+          "The TVL is returned formated in english and in USD. ",
+        inputSchema: zodToJsonSchema(GetStablecoinSchema),
       },
     ],
   };
@@ -74,6 +83,22 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
 
+      case "get-stablecoin-tvl": {
+        const usdcTvl = await getStablecoin(args, 2);
+        const latestUsdcTvl =
+          usdcTvl[usdcTvl.length - 1].totalBridgedToUSD.peggedUSD;
+        const usdtTvl = await getStablecoin(args, 3);
+        const latestUsdtTvl =
+          usdtTvl[usdtTvl.length - 1].totalBridgedToUSD.peggedUSD;
+        return {
+          content: [
+            {
+              type: "text",
+              text: `USDC TVL: ${latestUsdcTvl} USDT TVL: ${latestUsdtTvl}`,
+            },
+          ],
+        };
+      }
       default:
         throw new Error(`Unknown tool: ${name}`);
     }
