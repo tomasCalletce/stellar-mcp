@@ -2,7 +2,7 @@
 
 ## Description
 
-A simple MCP (Multi-Channel Protocol) server for interacting with the Stellar network.
+Blockchain and DeFi are difficult to understand. With an MCP-powered AI, we can create tooling to help users better navigate this complex web of protocols and opportunities.
 
 ## Prerequisites
 
